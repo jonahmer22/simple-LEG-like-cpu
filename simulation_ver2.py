@@ -4,6 +4,9 @@
 # GENERAL COMMANDS:
 # reset: does as it says, resets the machine
 # exit: again does as it says and quits (ctrl+c also works)
+# program: captures all user input and puts it into program memory until either the cpu runs out of memory or the user types end
+#   - end: stops programming early
+# run: resets the clock and runs the program currently in memory
 # 
 # ALU:
 # the rusults of all ALU operations (and or sub add) are stored in reg0, not is by default stored in reg0 but a destination can be specified
@@ -29,6 +32,7 @@
 # 011 0001 0101
 # -----------------------------------------------------
 
+import time
 import os
 
 # global variables for all registers and storage
@@ -39,7 +43,6 @@ _opcode = [0] * 3   # inputs
 _input1 = [0] * 4
 _input2 = [0] * 4
 _output = [0] * 4   # output
-_prg_mode = 0   # TODO: this flag doesn't seem to be acting correctly for a global variable
 
 def get_user_input():
     """
@@ -51,15 +54,20 @@ def get_user_input():
             - clear: clears the machine (exluding a Total Cycles count)
             - exit: safely exits the program
     """
+    global _prg_mode    # include global var
+
     while True:
         try:
             user_input = input("Enter opcode (3-bit) and two 4-bit inputs, separated by spaces: \n> ")
+            user_input = user_input.lower()
+            
+            # cases and handling non-binary commands
             if user_input == "reset":
                 _registers.clear()
                 _registers.extend([[0] * 4 for _ in range(15)])
                 
                 _program.clear()
-                _program.extend([[0] * 4 for _ in range(15)])
+                _program.extend([[0] * 11 for _ in range(16)])
                 
                 _clock.clear()
                 _clock.extend([0] * 4)
@@ -75,20 +83,24 @@ def get_user_input():
                 
                 _output.clear()
                 _output.extend([0] * 4)
+
+                _prg_mode = 0
                 
                 print("System reset.")
-                return 000, 0000, 0000  # make sure cpu goes onto next cycle with fresh input registers
-            
+                return 0, 0, 0  # make sure cpu goes onto next cycle with fresh input registers
 
             elif user_input == "exit":
                 exit(0)
 
             elif user_input == "program":
-                program(_prg_mode)
+                program()
 
-            elif user_input == "end" and _prg_mode[0] == 1:
-                _prg_mode == 0
-                return 000, 0000, 0000  # make sure cpu goes onto next cycle with fresh input registers
+            elif user_input == "run":
+                run()
+
+            elif user_input == "end" and _prg_mode == 1:
+                _prg_mode = 0
+                return 0, 0, 0# make sure cpu goes onto next cycle with fresh input registers
             
             parts = user_input.split()
             
@@ -139,13 +151,15 @@ def program():
         - Returns nothing
             - output is instead stored in 16 words of memory
     """
-    _prg_mode = 1   # show the user the cpu is in program mode
+    global _prg_mode    # include global var
+
+    # show the user the cpu is in program mode
+    _prg_mode = 1
     # clear the screen for better reading
     os.system("clear")
     print(f"PROGRAMMING MODE")  # add a nice header
     print("--------------------------4-Bit LEG Like CPU-------------------------")
     print_ui()  # reprint the ui
-    print(_prg_mode)
 
     # reset the clock
     _clock.clear()
@@ -158,13 +172,13 @@ def program():
         # get user input
         opcode, value1, value2 = get_user_input()
 
-        # correctly assign values to program memory
-        word = f"{opcode:03b}{value1:04b}{value2:04b}"
-        _program[i][:] = [int(bit) for bit in word]
-
         # give the user the option to exit programming early
         if _prg_mode == 0:
             break
+
+        # correctly assign values to program memory
+        word = f"{opcode:03b}{value1:04b}{value2:04b}"
+        _program[i] = [int(bit) for bit in word]
 
         # update the user on changes
         os.system("clear")
@@ -179,6 +193,11 @@ def program():
     _clock.clear()
     _clock.extend([0] * 4)
     _prg_mode = 0   # show the user the cpu is no longer in program mode
+
+    os.system("clear")
+    print(f"REGULAR MODE")  # add a nice header
+    print("--------------------------4-Bit LEG Like CPU-------------------------")
+    print_ui()
 
 def add(value1, value2):
     """
@@ -218,7 +237,7 @@ def sub(value1, value2):
         for i in range(3, -1, -1):  # left to right
             diff = _registers[reg1][i] - _registers[reg2][i] - borrow
             if diff < 0:
-                result[i] = 1  # borrow bit becomes 1
+                result[i] = 1 + diff  # borrow bit becomes 1
                 borrow = 1
             else:
                 result[i] = diff
@@ -241,7 +260,7 @@ def move(value1, value2):
     reg1 = int(f"{value1:04b}", 2)
     reg2 = int(f"{value2:04b}", 2)
 
-    _registers[reg2] = _registers[reg1] # move reg1 over reg2
+    _registers[reg2] = _registers[reg1][:] # move reg1 over reg2
 
 def immediate(value1, value2):
     """
@@ -371,7 +390,9 @@ def print_ui():
         - Accepts no inputs
         - Returns nothing
             - instead prints out values
-    """   
+    """
+    global _prg_mode    # include global var
+
     # UI display
     print("------------Registers--------------------------Program---------------")
     for i in range(15): # print the registers
@@ -394,11 +415,50 @@ def run():
         - Passes the values stored in the program array as the input to the cpu (opcode, value1, value2)
         - Returns nothing
     """
-    pass
+    global cycle    # include global var
+
+    # reset the clock
+    _clock.clear()
+    _clock.extend([0] * 4)
+
+    while True:
+        cycle += 1
+
+        # convert clock to decimal
+        address = int(''.join(map(str, _clock)), 2)
+
+        instruction = _program[address]
+
+        opcode = int(''.join(map(str, instruction[:3])), 2)
+        instr1 = int(''.join(map(str, instruction[3:7])), 2)
+        instr2 = int(''.join(map(str, instruction[7:11])), 2)
+
+        # Process the opcode with extracted values
+        process_opcode(opcode, instr1, instr2)
+
+        # print 'header' with cycle count
+        print(f"Total cycles: {cycle}")
+        print("--------------------------4-Bit LEG Like CPU-------------------------")
+        print_ui()  # print the rest of the ui
+
+        # increment the clock register to progress through the program
+        increment_clk()
+
+        # set clock to 5 hz
+        time.sleep(0.2)
+
+        os.system("clear")  # clear the screen so next cycle the screen is printed cleanly
 
 def main():
-    cycle = 0   # this has no effect on simulation I just thought it was nice to see how many cycles you have gone through
+    # define the global _prg_mode for later
+    global _prg_mode
+    global cycle    # make cycle accessable to run()   
     os.system("clear")  # initially clear the screen
+    
+    cycle = 0   # this has no effect on simulation I just thought it was nice to see how many cycles you have gone through
+
+    # init with program mode off
+    _prg_mode = 0
 
     # main logic loop
     while True:
