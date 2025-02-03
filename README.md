@@ -12,7 +12,7 @@
 - run: resets the clock and runs the program currently in memory
 
 ## ALU:
-- the rusults of all ALU operations (and or sub add) are stored in reg0, not is by default stored in reg0 but a destination can be specified
+- the rusults of all ALU operations (and, or, sub, add) are stored in reg0, not is by default stored in reg0 but a destination can be specified
 
 ## OPCODES:
 0. = ADD
