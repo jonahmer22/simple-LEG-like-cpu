@@ -7,6 +7,9 @@
 ## GENERAL COMMANDS:
 - reset: does as it says, resets the machine
 - exit: again does as it says and quits (ctrl+c also works)
+- program: captures all user input and puts it into program memory until either the cpu runs out of memory or the user types end
+    - end: stops programming early
+- run: resets the clock and runs the program currently in memory
 
 ## ALU:
 - the rusults of all ALU operations (and or sub add) are stored in reg0, not is by default stored in reg0 but a destination can be specified
