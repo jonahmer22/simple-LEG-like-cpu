@@ -25,6 +25,9 @@
 7. = NOT
 ### NOTE: all of these have to be in binary (000-111) not decimal for input.
 
+#### Example of UI:
+![alt text](assets/exampleui.png)
+
 ### input format:
 | OPCODE | Value1 | Value2 |
 |----------|----------|----------|
