@@ -278,16 +278,18 @@ def immediate(value1, value2):
     else:
         print("Invalid register address.")
 
-def jump(value1):
+def jump_if_zero(value1, value2):
     """
-    Sets the clock of the cpu to a given value
+    Sets the clock of the cpu to a given value if register at value2 is zero
         - Accepts one value in the form of 4-bit number
-        - Overwrites the value in CLK with value1
+        - Overwrites the value in CLK with value1 if the value associated with the register at value2 is zero
         - Returns nothing
             - output is instead written into the CLK register
     """
-    binary_value = f"{value1:04b}"  # convert value1 to binary
-    _clock[:] = [int(bit) for bit in binary_value]   # move into clock
+    reg2 = int(f"{value2:04b}", 2)  # convert value2 to decimal
+    if _registers[reg2] == [0, 0, 0, 0]:
+        binary_value = f"{value1:04b}"  # convert value1 to binary
+        _clock[:] = [int(bit) for bit in binary_value]   # move into clock
 
 def logical_and(value1, value2):
     """
@@ -374,7 +376,7 @@ def process_opcode(opcode, value1, value2):
         case 3:
             immediate(value1, value2)   # 'inserts' value2 at the register associated with value1
         case 4:
-            jump(value1) # jumps to the location of value1
+            jump_if_zero(value1, value2) # jumps to the location of value1
         case 5:
             logical_and(value1, value2)
         case 6:
