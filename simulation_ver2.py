@@ -91,16 +91,19 @@ def get_user_input():
 
             elif user_input == "exit":
                 exit(0)
+                return 0, 0, 0  # make sure to exit get_user_input()
 
             elif user_input == "program":
                 program()
+                return 0, 0, 0  # make sure to exit get_user_input()
 
             elif user_input == "run":
                 run()
+                return 0, 0, 0  # make sure to exit get_user_input()
 
             elif user_input == "end" and _prg_mode == 1:
                 _prg_mode = 0
-                return 0, 0, 0# make sure cpu goes onto next cycle with fresh input registers
+                return 0, 0, 0  # make sure cpu goes onto next cycle with fresh input registers
             
             parts = user_input.split()
             
@@ -156,7 +159,7 @@ def program():
     # show the user the cpu is in program mode
     _prg_mode = 1
     # clear the screen for better reading
-    os.system("clear")
+    os.system("clear")  # technically this only works on unix-like os', maybe change it to detect os and use `cls` if on windows
     print(f"PROGRAMMING MODE")  # add a nice header
     print("--------------------------4-Bit LEG Like CPU-------------------------")
     print_ui()  # reprint the ui
@@ -209,8 +212,8 @@ def add(value1, value2):
             - output is instead added to the first register in the array
     """
     # convert value1 and value2 into decimal to access registers
-    reg1 = int(f"{value1:04b}", 2)
-    reg2 = int(f"{value2:04b}", 2)
+    reg1 = int(f"{value1:04b}", 2)  # I do this so often I should probably make a helper function
+    reg2 = int(f"{value2:04b}", 2)  # on that note I should also have one for going in reverse
     carry = 0   # flag for carrying when adding between bits
     for i in range(3, -1, -1):  # left ot right
         sum_ = _registers[reg1][i] + _registers[reg2][i] + carry
@@ -290,6 +293,8 @@ def jump_if_zero(value1, value2):
     if _registers[reg2] == [0, 0, 0, 0]:
         binary_value = f"{value1:04b}"  # convert value1 to binary
         _clock[:] = [int(bit) for bit in binary_value]   # move into clock
+        return True
+    return False
 
 def logical_and(value1, value2):
     """
@@ -366,6 +371,7 @@ def process_opcode(opcode, value1, value2):
         - Uses a match case to execute the appropriate function based off of the given opcode
         - Returns nothing
     """
+    jmp_flag = False    # ensure that clock does not over increment on a jump
     match opcode:
         case 0:
             add(value1, value2)
@@ -376,7 +382,7 @@ def process_opcode(opcode, value1, value2):
         case 3:
             immediate(value1, value2)   # 'inserts' value2 at the register associated with value1
         case 4:
-            jump_if_zero(value1, value2) # jumps to the location of value1
+            jmp_flag = jump_if_zero(value1, value2) # jumps to the location of value1
         case 5:
             logical_and(value1, value2)
         case 6:
@@ -385,6 +391,7 @@ def process_opcode(opcode, value1, value2):
             logical_not(value1, value2)
         case _:
             print("Invalid opcode.")
+    return jmp_flag
 
 def print_ui():
     """
@@ -436,15 +443,16 @@ def run():
         instr2 = int(''.join(map(str, instruction[7:11])), 2)
 
         # Process the opcode with extracted values
-        process_opcode(opcode, instr1, instr2)
+        jmp_flag = process_opcode(opcode, instr1, instr2)
 
         # print 'header' with cycle count
         print(f"Total cycles: {cycle}")
         print("--------------------------4-Bit LEG Like CPU-------------------------")
         print_ui()  # print the rest of the ui
 
-        # increment the clock register to progress through the program
-        increment_clk()
+        # increment the clock register to progress through the program if we haven't just jumped
+        if not jmp_flag:    # (this preserves the first word of code in a loop)
+            increment_clk()
 
         # set clock to 5 hz
         time.sleep(0.2)
