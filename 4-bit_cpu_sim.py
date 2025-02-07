@@ -12,14 +12,46 @@
 # the rusults of all ALU operations (and or sub add) are stored in reg0, not is by default stored in reg0 but a destination can be specified
 # 
 # OPCODES:
-# 0 = ADD
+# 0 = ADD   // adds the values in address1 and address2 then stores the result in register 0
+#   Usage: 
+#       Add value in reg1 and reg2 (result will be stored in reg0)
+#       opcode: address1:   address2:
+#       000     0001        0010
 # 1 = SUB
+#   Usage: 
+#       Subtract value in reg2 from reg1 (result will be stored in reg0)
+#       opcode: address1:   address2:
+#       001     0001        0010
 # 2 = MOV
+#   Usage: 
+#       Move value in reg1 to reg2
+#       opcode: address1:   address2:
+#       010     0001        0010
 # 3 = IMMD
-# 4 = JMP
+#   Usage: 
+#       Insert value of 3 into reg4
+#       opcode: address1:   value:
+#       011     0100        0011
+# 4 = JMP_IF_ZERO
+#   Usage: 
+#       Jump to address 5 in program memory if reg0 is equal to zero
+#       opcode: address1:   address2:
+#       100     0000        0101
 # 5 = AND
+#   Usage: 
+#       And value in reg14 and reg2 (result will be stored in reg0)
+#       opcode: address1:   address2:
+#       101     1110        0010
 # 6 = OR
+#   Usage: 
+#       Add value in reg5 and reg4 (result will be stored in reg0)
+#       opcode: address1:   address2:
+#       110     0101        0100
 # 7 = NOT
+#   Usage: 
+#       Not the value in reg1 and store it in reg2
+#       opcode: address1:   address2:
+#       111     0001        0010
 # NOTE: all of these have to be in binary (000-111) not decimal for input
 # 
 # input format:
@@ -482,10 +514,11 @@ def main():
         # Get user input
         opcode, value1, value2 = get_user_input()
         update_display(opcode, value1, value2)  # update the arrays so reprinted screen displays correct values
-        process_opcode(opcode, value1, value2)  # decode the opcode and move on from there to execute command
+        jmp_flag = process_opcode(opcode, value1, value2)  # decode the opcode and move on from there to execute command
 
         # increment the clock register to progress through the program
-        increment_clk()
+        if not jmp_flag:
+            increment_clk()
 
         os.system("clear")  # clear the screen so next cycle the screen is printed cleanly
 
