@@ -10,7 +10,7 @@ void program(void);
 void run(void);
 
 // -----------------------------------------------------
-// README! 
+// README! CURRENTLY STILL V2 MOST UP TO DATE IS PYTHON VERSION
 // 
 // GENERAL COMMANDS:
 // reset: does as it says, resets the machine
