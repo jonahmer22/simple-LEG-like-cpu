@@ -338,7 +338,7 @@ def print_ui():
     for i in range(15): # print out first 15 registers and memory
         print(f"| R{i}\t| {''.join(map(str, _registers[i]))} | P{i}\t| {''.join(map(str, _program[i]))} |")
     # need another seperate print so that clock register is correctly labeled
-    print(f"| CLK\t| {''.join(map(str, _clock))} | P{15}\t| {''.join(map(str, _program[15]))} |")
+    print(f"| CLK\t| {''.join(map(str, _clock))} | P15\t| {''.join(map(str, _program[15]))} |")
     print("---------------------------------------")
 
 def main():
