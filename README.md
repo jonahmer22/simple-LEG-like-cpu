@@ -1,7 +1,7 @@
 # README! 
 
 ## GENERAL STATEMENT:
-- this code is a very simple simulation it is not an exact emulation and should not be treated as such.
+- this code is meant to be a very simple simulation it is not an exact emulation and should not be treated as such.
 - please try to understand the code, this helps with using the cpu (and may have the added benefit of a slightly deeper, albeit simplified, understanding of the general functions of a cpu)
 
 ## GENERAL COMMANDS:
